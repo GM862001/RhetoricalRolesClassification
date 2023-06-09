@@ -25,16 +25,17 @@ class RhetoricalRolesDataset(torch.utils.data.Dataset):
             )["input_ids"]
         )
 
-        labels = self._df.labels.tolist() if has_labels else [None] * len(self._df)
-        self._labels = torch.as_tensor(
-            labels
-        ).long()  # Loss computation requires labels of type long
+        self._has_labels = has_labels
+        if self._has_labels:
+            self._labels = torch.as_tensor(
+                self._df.labels.tolist()
+            ).long()  # Loss computation requires labels of type long
 
     def __len__(self):
         return len(self._inputs)
 
     def __getitem__(self, idx):
-        return self._inputs[idx], self._labels[idx]
+        return (self._inputs[idx], self._labels[idx]) if self._has_labels else self._inputs[idx]
 
 
 class RhetoricalRolesDatasetForTransformerOverBERT(torch.utils.data.Dataset):
@@ -56,7 +57,8 @@ class RhetoricalRolesDatasetForTransformerOverBERT(torch.utils.data.Dataset):
         self._max_segment_length = max_segment_length
 
         self._inputs = self._get_inputs()
-        self._labels = self._get_labels()
+        if self._has_labels:
+            self._labels = self._get_labels()
 
     def _get_inputs(self):
         documents_input_ids = []
@@ -76,9 +78,6 @@ class RhetoricalRolesDatasetForTransformerOverBERT(torch.utils.data.Dataset):
         return documents_input_ids
 
     def _get_labels(self):
-        if not self._has_labels:
-            return [None] * len(self._documents)
-
         documents_labels = []
         for document in self._documents:
             document_labels = document["labels"] + [-100] * self._get_document_padding_length(
@@ -98,4 +97,4 @@ class RhetoricalRolesDatasetForTransformerOverBERT(torch.utils.data.Dataset):
         return len(self._inputs)
 
     def __getitem__(self, idx):
-        return self._inputs[idx], self._labels[idx]
+        return (self._inputs[idx], self._labels[idx]) if self._has_labels else self._inputs[idx]
