@@ -74,13 +74,17 @@ def test_ToBERT(
         predicted_labels += pred.flatten().tolist()[:n_segments]
 
     evaluate(
-        y_true=np.array(true_labels),
-        y_pred=np.array(predicted_labels),
+        y_true=true_labels,
+        y_pred=predicted_labels,
         label2rhetRole=label2rhetRole,
     )
 
 
 def evaluate(y_true, y_pred, label2rhetRole):
+
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    
     print("Overall")
     print(f"\tAccuracy: {accuracy_score(y_true, y_pred)}")
     print(f"\tMCC: {matthews_corrcoef(y_true, y_pred)}")
